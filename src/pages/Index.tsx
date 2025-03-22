@@ -27,7 +27,11 @@ const MOCK_ALERTS: Alert[] = [
       avatarUrl: 'https://i.pravatar.cc/150?img=1',
       isOnline: true
     },
-    isRead: false
+    isRead: false,
+    possible_death: 12,
+    false_alarm: 5,
+    location: 'Database Cluster A-3',
+    description: 'Multiple nodes reporting critical errors with potential for cascading failures across connected systems.'
   },
   {
     id: '2',
@@ -41,7 +45,11 @@ const MOCK_ALERTS: Alert[] = [
       avatarUrl: 'https://i.pravatar.cc/150?img=3',
       isOnline: false
     },
-    isRead: true
+    isRead: true,
+    possible_death: 0,
+    false_alarm: 15,
+    location: 'Authentication Service',
+    description: 'IP addresses originate from 3 different countries and appear to be using a rotating proxy system to avoid rate limiting.'
   },
   {
     id: '3',
@@ -55,7 +63,10 @@ const MOCK_ALERTS: Alert[] = [
       avatarUrl: 'https://i.pravatar.cc/150?img=4',
       isOnline: true
     },
-    isRead: false
+    isRead: false,
+    false_alarm: 30,
+    location: 'Public API Gateway',
+    description: 'Traffic appears to be legitimate but sustained well above normal levels for this time period.'
   },
   {
     id: '4',
@@ -69,7 +80,11 @@ const MOCK_ALERTS: Alert[] = [
       avatarUrl: 'https://i.pravatar.cc/150?img=5',
       isOnline: true
     },
-    isRead: false
+    isRead: false,
+    possible_death: 0,
+    false_alarm: 45,
+    location: 'App Server Node 7',
+    description: 'Memory usage has been gradually increasing over the past 48 hours without corresponding traffic increases.'
   },
   {
     id: '5',
@@ -83,7 +98,10 @@ const MOCK_ALERTS: Alert[] = [
       avatarUrl: 'https://i.pravatar.cc/150?img=7',
       isOnline: false
     },
-    isRead: true
+    isRead: true,
+    false_alarm: 70,
+    location: 'Production Environment',
+    description: 'Deployment completed in 4 minutes and 32 seconds. All post-deployment tests passed successfully.'
   },
   {
     id: '6',
@@ -97,7 +115,10 @@ const MOCK_ALERTS: Alert[] = [
       avatarUrl: 'https://i.pravatar.cc/150?img=9',
       isOnline: true
     },
-    isRead: true
+    isRead: true,
+    false_alarm: 0,
+    location: 'Database Maintenance',
+    description: 'This is a routine maintenance operation that occurs monthly. All systems will automatically fail over to secondary instances.'
   }
 ];
 
