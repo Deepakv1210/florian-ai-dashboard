@@ -9,8 +9,9 @@ app = Flask(__name__)
 # Configure CORS with more explicit settings to allow all origins
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"], "allow_headers": ["Content-Type", "Authorization"]}})
 
-# Store alerts in memory for this demo
+# Store alerts in memory - start with an empty list
 alerts = []
+print("Server initialized with empty alerts list")
 
 # Helper function to generate a unique ID
 def generate_id():
@@ -27,6 +28,7 @@ def calculate_severity(data):
 
 @app.route('/api/alerts', methods=['GET'])
 def get_alerts():
+    print(f"GET /api/alerts - Returning {len(alerts)} alerts")
     # Add response headers to ensure proper CORS
     response = jsonify(alerts)
     response.headers.add('Access-Control-Allow-Origin', '*')
@@ -73,6 +75,7 @@ def add_alert():
         alerts.insert(0, new_alert)
         
         print(f"Created new alert: {new_alert}")
+        print(f"Total alerts in system: {len(alerts)}")
         
         response = jsonify({
             "success": True,

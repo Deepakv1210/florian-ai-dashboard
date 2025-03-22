@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -22,52 +21,16 @@ const getApiUrl = () => {
     return 'http://localhost:5000/api';
   }
   
-  // For deployed environments or when localhost is not accessible
-  console.log('Running in demo mode - Python API not accessible in deployment');
-  return 'demo';
+  // For deployed environments - only use API mode, no demo data
+  console.log('Using API endpoint from remote host');
+  return `http://${window.location.hostname}:5000/api`;
 };
 
 // API URL for the Python server
 const API_URL = getApiUrl();
 console.log(`API URL set to: ${API_URL}`);
 
-// Sample demo data to show when API is unavailable
-const DEMO_ALERTS: Alert[] = [
-  {
-    id: "demo-1",
-    title: "Building fire reported",
-    message: "Building fire reported in downtown area. Multiple people trapped inside.",
-    severity: "high",
-    timestamp: new Date().toISOString(),
-    recipient: {
-      id: "recipient-1",
-      name: "Emergency Response Team",
-      isOnline: true
-    },
-    isRead: false,
-    possible_death: 3,
-    false_alarm: 10,
-    location: "123 Main St, Downtown",
-    description: "Building fire reported in downtown area. Multiple people trapped inside."
-  },
-  {
-    id: "demo-2",
-    title: "Flooding in residential area",
-    message: "Rising water levels in east side neighborhood. Evacuations may be necessary.",
-    severity: "medium",
-    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    recipient: {
-      id: "recipient-2",
-      name: "Flood Response Unit",
-      isOnline: true
-    },
-    isRead: true,
-    possible_death: 0,
-    false_alarm: 25,
-    location: "East Side Neighborhood",
-    description: "Rising water levels in east side neighborhood. Evacuations may be necessary."
-  }
-];
+// Remove all demo alerts - we only want to show real alerts from the server
 
 type ViewTab = 'all' | 'unread' | 'saved';
 
@@ -78,21 +41,11 @@ const Index = () => {
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiUnavailable, setApiUnavailable] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [showContent, setShowContent] = useState(false); // Only show content when we have alerts
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial loading state
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Fetch alerts from the Python API
   const fetchAlerts = async () => {
-    // If we're in demo mode, use the demo data
-    if (API_URL === 'demo') {
-      console.log('Using demo data - Python API not available in this environment');
-      setAlerts(DEMO_ALERTS);
-      setApiUnavailable(true);
-      setShowContent(true);
-      return;
-    }
-    
     try {
       setIsLoading(true);
       
@@ -119,27 +72,18 @@ const Index = () => {
       }
       
       const data = await response.json();
-      console.log('Successfully fetched alerts:', data);
+      console.log('Successfully fetched alerts:', data, 'Count:', data.length);
       setAlerts(data);
-      setApiUnavailable(false);
-      setShowContent(true);
+      setApiError(null);
+      setIsInitialLoad(false);
     } catch (error) {
       console.error('Error fetching alerts:', error);
+      setApiError(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       
-      // If we've failed more than 2 times, load demo data
-      if (retryCount > 2 && alerts.length === 0) {
-        console.log('Loading demo data due to API unavailability');
-        setAlerts(DEMO_ALERTS);
-        setApiUnavailable(true);
-        setShowContent(true);
-        toast.error('Using demo data', {
-          description: 'Could not connect to the API server. Showing demo data instead.',
+      if (isInitialLoad) {
+        toast.error('Failed to connect to alert server', {
+          description: 'Please ensure the server is running and accessible',
         });
-      } else {
-        toast.error('Failed to fetch alerts', {
-          description: 'Please make sure the Python server is running at http://localhost:5000',
-        });
-        setRetryCount(prev => prev + 1);
       }
     } finally {
       setIsLoading(false);
@@ -149,15 +93,6 @@ const Index = () => {
   // Delete an alert
   const deleteAlert = async (alertId: string) => {
     try {
-      // If using demo data, just update the local state
-      if (apiUnavailable || API_URL === 'demo') {
-        setAlerts(alerts.filter(a => a.id !== alertId));
-        toast('Alert deleted', {
-          description: 'The alert has been removed (demo mode)',
-        });
-        return;
-      }
-      
       const response = await fetch(`${API_URL}/alerts/${alertId}`, {
         method: 'DELETE',
         mode: 'cors',
@@ -188,15 +123,13 @@ const Index = () => {
     // Initial fetch
     fetchAlerts();
     
-    // Set up polling only if not in demo mode
-    if (API_URL !== 'demo') {
-      const interval = setInterval(() => {
-        fetchAlerts();
-      }, 5000); // Check every 5 seconds
-      
-      return () => clearInterval(interval);
-    }
-  }, [retryCount]);
+    // Set up polling
+    const interval = setInterval(() => {
+      fetchAlerts();
+    }, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Filter alerts based on active tab, severity filter, and search term
   const filterAlerts = () => {
@@ -277,8 +210,8 @@ const Index = () => {
     });
   };
 
-  // If no alerts have been loaded yet and we haven't decided if API is unavailable, show loading state
-  if (!showContent && !apiUnavailable) {
+  // If we're still loading the initial data, show a loading screen
+  if (isInitialLoad) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <Header onSearch={handleSearch} onFilterClick={() => {}} />
@@ -288,7 +221,7 @@ const Index = () => {
               <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
               <h2 className="text-xl font-semibold mb-2">Waiting for alerts...</h2>
               <p className="text-muted-foreground mb-4">
-                Checking for emergency alerts
+                Checking for emergency alerts from the server
               </p>
               <Button 
                 onClick={fetchAlerts} 
@@ -322,16 +255,14 @@ const Index = () => {
       />
       
       <main className="flex-1 container max-w-5xl py-6 px-4 md:px-6">
-        {apiUnavailable && (
+        {apiError && (
           <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md mb-6">
             <div className="flex items-center">
               <AlertTriangle className="h-5 w-5 mr-2" />
-              <span className="font-medium">API Unavailable</span>
+              <span className="font-medium">Connection Error</span>
             </div>
             <p className="text-sm mt-1">
-              {API_URL === 'demo' 
-                ? 'Running in demo mode - Python API server is not available in this environment.'
-                : 'Could not connect to the Python API server. Showing demo data instead. Make sure the server is running at http://localhost:5000'}
+              {apiError}. Make sure the server is running at http://localhost:5000
             </p>
           </div>
         )}
@@ -438,7 +369,7 @@ const Index = () => {
 // Helper function to render the alert list with proper animation
 const renderAlertList = (alerts: Alert[], onConnect: (id: string) => void, onDelete: (id: string) => void) => {
   if (alerts.length === 0) {
-    return <EmptyState />;
+    return <EmptyState message="No alerts from the server yet. Use the API to send alerts." />;
   }
 
   return (
