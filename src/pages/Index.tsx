@@ -16,6 +16,34 @@ import { staggerContainer } from '@/components/animations';
 // Initial empty array for alerts
 const INITIAL_ALERTS: Alert[] = [];
 
+// Sample request data for testing
+const SAMPLE_REQUESTS = [
+  {
+    response: {
+      possible_death: 5,
+      false_alarm: 15,
+      location: "Downtown District",
+      description: "Fire outbreak at commercial building. Emergency services dispatched."
+    }
+  },
+  {
+    response: {
+      possible_death: 0,
+      false_alarm: 60,
+      location: "West Highway",
+      description: "Vehicle collision reported. Minor injuries suspected."
+    }
+  },
+  {
+    response: {
+      possible_death: 12,
+      false_alarm: 5,
+      location: "Central Hospital",
+      description: "Critical infrastructure failure. Immediate evacuation required."
+    }
+  }
+];
+
 type ViewTab = 'all' | 'unread' | 'saved';
 
 const Index = () => {
@@ -32,13 +60,13 @@ const Index = () => {
     // Generate a new alert from the response
     const newAlert: Alert = {
       id: `alert-${Date.now()}`, // Generate a unique ID
-      title: "New Alert", // You might want to generate this based on response data
-      message: "New alert received from the server", // Or extract from response
+      title: response.description?.split('.')[0] || "New Alert", // Use first sentence of description as title
+      message: response.description || "New alert received from the server",
       severity: calculateSeverity(response), // Helper function to determine severity
       timestamp: new Date().toISOString(),
       recipient: {
         id: `recipient-${Date.now()}`,
-        name: "Alert Recipient", // This should come from your user system
+        name: "Emergency Response Team", // This should come from your user system
         isOnline: true
       },
       isRead: false,
@@ -58,6 +86,16 @@ const Index = () => {
     });
   };
   
+  // Function to manually trigger a test alert (for development/testing)
+  const triggerTestAlert = () => {
+    // Get a random sample request
+    const randomIndex = Math.floor(Math.random() * SAMPLE_REQUESTS.length);
+    const sampleRequest = SAMPLE_REQUESTS[randomIndex];
+    
+    // Process the sample request
+    addNewAlert(sampleRequest);
+  };
+  
   // Helper function to calculate severity based on response data
   const calculateSeverity = (response: any): AlertSeverity => {
     if (response.possible_death && response.possible_death > 0) {
@@ -71,24 +109,12 @@ const Index = () => {
 
   // Simulate receiving new alerts (this would be replaced with your actual API call)
   useEffect(() => {
-    // This is just a simulation - replace with your actual API implementation
-    const simulateIncomingAlert = () => {
-      // Example server response format
-      const mockServerResponse = {
-        response: {
-          possible_death: Math.floor(Math.random() * 10),
-          false_alarm: Math.floor(Math.random() * 100),
-          location: "System Zone " + Math.floor(Math.random() * 10),
-          description: "Simulated alert with details about the situation."
-        }
-      };
-      
-      // Process the response as if it came from the server
-      addNewAlert(mockServerResponse);
-    };
+    // This is just a simulation for testing - uncomment to enable automatic alerts
+    // const interval = setInterval(() => {
+    //   const randomIndex = Math.floor(Math.random() * SAMPLE_REQUESTS.length);
+    //   addNewAlert(SAMPLE_REQUESTS[randomIndex]);
+    // }, 30000); // New alert every 30 seconds
     
-    // For demo purposes - uncomment to test
-    // const interval = setInterval(simulateIncomingAlert, 30000); // New alert every 30 seconds
     // return () => clearInterval(interval);
   }, []);
 
@@ -224,6 +250,16 @@ const Index = () => {
               </TabsList>
               
               <div className="flex items-center gap-2">
+                {/* Test button for triggering sample alerts */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={triggerTestAlert}
+                >
+                  Test Alert
+                </Button>
+                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8">
