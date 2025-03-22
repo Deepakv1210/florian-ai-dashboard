@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { AlertTriangle, ChevronDown, Bookmark, CheckCheck, Filter } from 'lucide-react';
@@ -18,16 +17,14 @@ const INITIAL_ALERTS: Alert[] = [];
 
 // Dynamic API URL detection
 const getApiUrl = () => {
-  // Check if we're in a development environment
-  const isDev = import.meta.env.DEV || window.location.hostname === 'localhost';
-  
-  // If we're in development, use localhost
-  if (isDev) {
-    return 'http://localhost:5000/api';
+  // For deployed environments, detect if we're running on preview domain
+  if (window.location.hostname.includes('lovable.app')) {
+    // In this case, we should use the demo data as the Python server won't be available
+    return 'demo';
   }
   
-  // For production, we might use relative paths or explicit domain
-  return '/api';
+  // If we're in development or local environment, use the Python server
+  return 'http://localhost:5000/api';
 };
 
 // API URL for the Python server
@@ -85,6 +82,14 @@ const Index = () => {
 
   // Fetch alerts from the Python API
   const fetchAlerts = async () => {
+    // If we're in demo mode, use the demo data
+    if (API_URL === 'demo') {
+      console.log('Using demo data - Python API not available in this environment');
+      setAlerts(DEMO_ALERTS);
+      setApiUnavailable(true);
+      return;
+    }
+    
     try {
       setIsLoading(true);
       
@@ -137,7 +142,7 @@ const Index = () => {
   const deleteAlert = async (alertId: string) => {
     try {
       // If using demo data, just update the local state
-      if (apiUnavailable) {
+      if (apiUnavailable || API_URL === 'demo') {
         setAlerts(alerts.filter(a => a.id !== alertId));
         toast('Alert deleted', {
           description: 'The alert has been removed (demo mode)',
@@ -175,12 +180,14 @@ const Index = () => {
     // Initial fetch
     fetchAlerts();
     
-    // Set up polling
-    const interval = setInterval(() => {
-      fetchAlerts();
-    }, 5000); // Check every 5 seconds
-    
-    return () => clearInterval(interval);
+    // Set up polling only if not in demo mode
+    if (API_URL !== 'demo') {
+      const interval = setInterval(() => {
+        fetchAlerts();
+      }, 5000); // Check every 5 seconds
+      
+      return () => clearInterval(interval);
+    }
   }, [retryCount]);
 
   // Filter alerts based on active tab, severity filter, and search term
@@ -287,8 +294,9 @@ const Index = () => {
               <span className="font-medium">API Unavailable</span>
             </div>
             <p className="text-sm mt-1">
-              Could not connect to the Python API server. Showing demo data instead.
-              Make sure the server is running at <code className="bg-amber-100 px-1 py-0.5 rounded">http://localhost:5000</code>
+              {API_URL === 'demo' 
+                ? 'Running in demo mode - Python API server is not available in this environment.'
+                : 'Could not connect to the Python API server. Showing demo data instead. Make sure the server is running at http://localhost:5000'}
             </p>
           </div>
         )}

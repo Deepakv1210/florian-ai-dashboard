@@ -42,16 +42,26 @@ The application will run on http://localhost:3000.
 
 If you see errors like `ERR_BLOCKED_BY_CLIENT` in your browser console:
 
-1. Check if you have any ad blockers or browser extensions that might be blocking requests to localhost
-2. If using Chrome, you can try launching it with web security disabled:
+1. **Disable Ad Blockers**: Some ad blockers may block requests to localhost. Try temporarily disabling your ad blocker.
+
+2. **Use Chrome with Web Security Disabled**: If needed, you can launch Chrome with web security disabled:
    ```
    chrome.exe --disable-web-security --user-data-dir=C:\temp
    ```
-3. Make sure your Python server is running and accessible
 
-### Demo Mode
+3. **Check Network Tab**: In your browser's developer tools, check the Network tab to see if requests are being blocked.
 
-The dashboard includes a demo mode that will activate automatically if it cannot connect to the Python server. In demo mode, you'll see a yellow notification banner and sample alerts will be displayed.
+4. **Verify Python Server**: Make sure your Python server is running and accessible at http://localhost:5000/health
+
+### Forced Demo Mode
+
+If you're viewing the dashboard on a deployment URL (like lovable.app), the app will automatically run in demo mode as it cannot connect to your local Python server.
+
+### JSON Parse Errors
+
+If you see errors like "Unexpected token '<'" in your console:
+1. Check if the Python server is returning HTML instead of JSON (this can happen if there's an error)
+2. Try accessing http://localhost:5000/api/alerts directly in your browser to see what's returned
 
 ## Using Postman to Send Alerts
 
@@ -69,7 +79,7 @@ The dashboard includes a demo mode that will activate automatically if it cannot
 ```
 
 4. Send the request
-5. The alert will appear in the dashboard
+5. The alert will appear in the dashboard immediately
 
 ## Alert Properties
 

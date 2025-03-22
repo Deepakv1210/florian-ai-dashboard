@@ -29,6 +29,7 @@ def calculate_severity(data):
 def get_alerts():
     # Add response headers to ensure proper CORS
     response = jsonify(alerts)
+    response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
 @app.route('/api/alerts', methods=['POST'])
@@ -64,11 +65,13 @@ def add_alert():
         # Add to our store (at beginning of list)
         alerts.insert(0, new_alert)
         
-        return jsonify({
+        response = jsonify({
             "success": True,
             "message": "Alert created successfully",
             "alert": new_alert
-        }), 201
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 201
     
     except Exception as e:
         print(f"Error creating alert: {str(e)}")
@@ -84,15 +87,36 @@ def delete_alert(alert_id):
     alerts = [alert for alert in alerts if alert["id"] != alert_id]
     
     if len(alerts) < initial_length:
-        return jsonify({
+        response = jsonify({
             "success": True,
             "message": "Alert deleted successfully"
         })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
     else:
-        return jsonify({
+        response = jsonify({
             "success": False,
             "message": "Alert not found"
-        }), 404
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 404
+
+# Add options method to handle preflight requests
+@app.route('/api/alerts', methods=['OPTIONS'])
+def options_alerts():
+    response = app.make_default_options_response()
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, DELETE')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    return response
+
+@app.route('/api/alerts/<alert_id>', methods=['OPTIONS'])
+def options_alert(alert_id):
+    response = app.make_default_options_response()
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, DELETE')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    return response
 
 # Add a simple health check endpoint
 @app.route('/health', methods=['GET'])
