@@ -15,20 +15,22 @@ import { staggerContainer } from '@/components/animations';
 // Initial empty array for alerts
 const INITIAL_ALERTS: Alert[] = [];
 
-// Dynamic API URL detection
+// Dynamic API URL detection - FIXED to avoid incorrect paths
 const getApiUrl = () => {
-  // For deployed environments, detect if we're running on preview domain
-  if (window.location.hostname.includes('lovable.app')) {
-    // In this case, we should use the demo data as the Python server won't be available
+  // Check if we're running on deployed environments like Lovable
+  if (window.location.hostname.includes('lovable.app') || 
+      !window.location.hostname.includes('localhost')) {
+    console.log('Running in demo mode - Python API not accessible in deployment');
     return 'demo';
   }
   
-  // If we're in development or local environment, use the Python server
+  // Local development - use the Python server
   return 'http://localhost:5000/api';
 };
 
 // API URL for the Python server
 const API_URL = getApiUrl();
+console.log(`API URL set to: ${API_URL}`);
 
 // Sample demo data to show when API is unavailable
 const DEMO_ALERTS: Alert[] = [
@@ -93,12 +95,13 @@ const Index = () => {
     try {
       setIsLoading(true);
       
-      console.log(`Fetching alerts from: ${API_URL}/alerts`);
+      const apiEndpoint = `${API_URL}/alerts`;
+      console.log(`Fetching alerts from: ${apiEndpoint}`);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
-      const response = await fetch(`${API_URL}/alerts`, {
+      const response = await fetch(apiEndpoint, {
         signal: controller.signal,
         mode: 'cors', // Explicitly request CORS
         headers: {
@@ -110,10 +113,12 @@ const Index = () => {
       clearTimeout(timeoutId);
       
       if (!response.ok) {
+        console.error(`Server responded with status: ${response.status}`);
         throw new Error(`Server responded with status: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('Successfully fetched alerts:', data);
       setAlerts(data);
       setApiUnavailable(false);
     } catch (error) {

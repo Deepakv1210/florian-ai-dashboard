@@ -7,7 +7,7 @@ import time
 
 app = Flask(__name__)
 # Configure CORS with more explicit settings to allow all origins
-CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "DELETE"], "allow_headers": ["Content-Type", "Authorization"]}})
+CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "DELETE", "OPTIONS"], "allow_headers": ["Content-Type", "Authorization"]}})
 
 # Store alerts in memory for this demo
 alerts = []
@@ -30,6 +30,8 @@ def get_alerts():
     # Add response headers to ensure proper CORS
     response = jsonify(alerts)
     response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     return response
 
 @app.route('/api/alerts', methods=['POST'])
@@ -71,6 +73,8 @@ def add_alert():
             "alert": new_alert
         })
         response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         return response, 201
     
     except Exception as e:
@@ -92,6 +96,8 @@ def delete_alert(alert_id):
             "message": "Alert deleted successfully"
         })
         response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         return response
     else:
         response = jsonify({
@@ -99,6 +105,8 @@ def delete_alert(alert_id):
             "message": "Alert not found"
         })
         response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
         return response, 404
 
 # Add options method to handle preflight requests
@@ -106,7 +114,7 @@ def delete_alert(alert_id):
 def options_alerts():
     response = app.make_default_options_response()
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, DELETE')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     return response
 
@@ -114,7 +122,7 @@ def options_alerts():
 def options_alert(alert_id):
     response = app.make_default_options_response()
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Methods', 'GET, DELETE')
+    response.headers.add('Access-Control-Allow-Methods', 'GET, DELETE, OPTIONS')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     return response
 
