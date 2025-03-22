@@ -6,7 +6,8 @@ import os
 import time
 
 app = Flask(__name__)
-CORS(app)
+# Configure CORS with more explicit settings to allow all origins
+CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "DELETE"], "allow_headers": ["Content-Type", "Authorization"]}})
 
 # Store alerts in memory for this demo
 alerts = []
@@ -26,7 +27,9 @@ def calculate_severity(data):
 
 @app.route('/api/alerts', methods=['GET'])
 def get_alerts():
-    return jsonify(alerts)
+    # Add response headers to ensure proper CORS
+    response = jsonify(alerts)
+    return response
 
 @app.route('/api/alerts', methods=['POST'])
 def add_alert():
@@ -91,6 +94,12 @@ def delete_alert(alert_id):
             "message": "Alert not found"
         }), 404
 
+# Add a simple health check endpoint
+@app.route('/health', methods=['GET'])
+def health_check():
+    return jsonify({"status": "healthy", "timestamp": time.time()})
+
 if __name__ == '__main__':
     print("Python API server running at http://localhost:5000")
+    # Make the server accessible from any network interface
     app.run(host='0.0.0.0', port=5000, debug=True)

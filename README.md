@@ -19,7 +19,12 @@ Then start the Python server:
 python server.py
 ```
 
-The server will run on http://localhost:5000.
+The server will run on http://localhost:5000. You should see the following output:
+```
+Python API server running at http://localhost:5000
+ * Serving Flask app 'server'
+ * Debug mode: on
+```
 
 ### 2. Start the React App
 
@@ -30,6 +35,23 @@ npm start
 ```
 
 The application will run on http://localhost:3000.
+
+## Troubleshooting
+
+### CORS Issues
+
+If you see errors like `ERR_BLOCKED_BY_CLIENT` in your browser console:
+
+1. Check if you have any ad blockers or browser extensions that might be blocking requests to localhost
+2. If using Chrome, you can try launching it with web security disabled:
+   ```
+   chrome.exe --disable-web-security --user-data-dir=C:\temp
+   ```
+3. Make sure your Python server is running and accessible
+
+### Demo Mode
+
+The dashboard includes a demo mode that will activate automatically if it cannot connect to the Python server. In demo mode, you'll see a yellow notification banner and sample alerts will be displayed.
 
 ## Using Postman to Send Alerts
 

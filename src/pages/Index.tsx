@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -15,8 +16,60 @@ import { staggerContainer } from '@/components/animations';
 // Initial empty array for alerts
 const INITIAL_ALERTS: Alert[] = [];
 
+// Dynamic API URL detection
+const getApiUrl = () => {
+  // Check if we're in a development environment
+  const isDev = import.meta.env.DEV || window.location.hostname === 'localhost';
+  
+  // If we're in development, use localhost
+  if (isDev) {
+    return 'http://localhost:5000/api';
+  }
+  
+  // For production, we might use relative paths or explicit domain
+  return '/api';
+};
+
 // API URL for the Python server
-const API_URL = 'http://localhost:5000/api';
+const API_URL = getApiUrl();
+
+// Sample demo data to show when API is unavailable
+const DEMO_ALERTS: Alert[] = [
+  {
+    id: "demo-1",
+    title: "Building fire reported",
+    message: "Building fire reported in downtown area. Multiple people trapped inside.",
+    severity: "high",
+    timestamp: new Date().toISOString(),
+    recipient: {
+      id: "recipient-1",
+      name: "Emergency Response Team",
+      isOnline: true
+    },
+    isRead: false,
+    possible_death: 3,
+    false_alarm: 10,
+    location: "123 Main St, Downtown",
+    description: "Building fire reported in downtown area. Multiple people trapped inside."
+  },
+  {
+    id: "demo-2",
+    title: "Flooding in residential area",
+    message: "Rising water levels in east side neighborhood. Evacuations may be necessary.",
+    severity: "medium",
+    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    recipient: {
+      id: "recipient-2",
+      name: "Flood Response Unit",
+      isOnline: true
+    },
+    isRead: true,
+    possible_death: 0,
+    false_alarm: 25,
+    location: "East Side Neighborhood",
+    description: "Rising water levels in east side neighborhood. Evacuations may be necessary."
+  }
+];
 
 type ViewTab = 'all' | 'unread' | 'saved';
 
@@ -27,24 +80,54 @@ const Index = () => {
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [apiUnavailable, setApiUnavailable] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Fetch alerts from the Python API
   const fetchAlerts = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${API_URL}/alerts`);
+      
+      console.log(`Fetching alerts from: ${API_URL}/alerts`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await fetch(`${API_URL}/alerts`, {
+        signal: controller.signal,
+        mode: 'cors', // Explicitly request CORS
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch alerts');
+        throw new Error(`Server responded with status: ${response.status}`);
       }
       
       const data = await response.json();
       setAlerts(data);
+      setApiUnavailable(false);
     } catch (error) {
       console.error('Error fetching alerts:', error);
-      toast.error('Failed to fetch alerts', {
-        description: 'Please make sure the Python server is running',
-      });
+      
+      // If we've failed more than 2 times, load demo data
+      if (retryCount > 2 && alerts.length === 0) {
+        console.log('Loading demo data due to API unavailability');
+        setAlerts(DEMO_ALERTS);
+        setApiUnavailable(true);
+        toast.error('Using demo data', {
+          description: 'Could not connect to the API server. Showing demo data instead.',
+        });
+      } else {
+        toast.error('Failed to fetch alerts', {
+          description: 'Please make sure the Python server is running at http://localhost:5000',
+        });
+        setRetryCount(prev => prev + 1);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -53,8 +136,22 @@ const Index = () => {
   // Delete an alert
   const deleteAlert = async (alertId: string) => {
     try {
+      // If using demo data, just update the local state
+      if (apiUnavailable) {
+        setAlerts(alerts.filter(a => a.id !== alertId));
+        toast('Alert deleted', {
+          description: 'The alert has been removed (demo mode)',
+        });
+        return;
+      }
+      
       const response = await fetch(`${API_URL}/alerts/${alertId}`, {
         method: 'DELETE',
+        mode: 'cors',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
       });
       
       if (!response.ok) {
@@ -84,7 +181,7 @@ const Index = () => {
     }, 5000); // Check every 5 seconds
     
     return () => clearInterval(interval);
-  }, []);
+  }, [retryCount]);
 
   // Filter alerts based on active tab, severity filter, and search term
   const filterAlerts = () => {
@@ -183,6 +280,19 @@ const Index = () => {
       />
       
       <main className="flex-1 container max-w-5xl py-6 px-4 md:px-6">
+        {apiUnavailable && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md mb-6">
+            <div className="flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              <span className="font-medium">API Unavailable</span>
+            </div>
+            <p className="text-sm mt-1">
+              Could not connect to the Python API server. Showing demo data instead.
+              Make sure the server is running at <code className="bg-amber-100 px-1 py-0.5 rounded">http://localhost:5000</code>
+            </p>
+          </div>
+        )}
+        
         <div className="flex items-center justify-between mb-6">
           <Tabs 
             defaultValue="all" 
