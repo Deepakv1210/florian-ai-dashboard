@@ -13,120 +13,14 @@ import Header from '@/components/Header';
 import EmptyState from '@/components/EmptyState';
 import { staggerContainer } from '@/components/animations';
 
-// Initial mock data for alerts
-const MOCK_ALERTS: Alert[] = [
-  {
-    id: '1',
-    title: 'Critical system failure detected',
-    message: 'The primary database cluster is experiencing high latency and potential data loss. Immediate intervention required.',
-    severity: 'high',
-    timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
-    recipient: {
-      id: 'r1',
-      name: 'Sarah Chen',
-      avatarUrl: 'https://i.pravatar.cc/150?img=1',
-      isOnline: true
-    },
-    isRead: false,
-    possible_death: 12,
-    false_alarm: 5,
-    location: 'Database Cluster A-3',
-    description: 'Multiple nodes reporting critical errors with potential for cascading failures across connected systems.'
-  },
-  {
-    id: '2',
-    title: 'Unusual user activity detected',
-    message: 'Multiple failed login attempts from various IP addresses for user account admin@example.com. Possible brute force attack in progress.',
-    severity: 'high',
-    timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 minutes ago
-    recipient: {
-      id: 'r2',
-      name: 'James Wilson',
-      avatarUrl: 'https://i.pravatar.cc/150?img=3',
-      isOnline: false
-    },
-    isRead: true,
-    possible_death: 0,
-    false_alarm: 15,
-    location: 'Authentication Service',
-    description: 'IP addresses originate from 3 different countries and appear to be using a rotating proxy system to avoid rate limiting.'
-  },
-  {
-    id: '3',
-    title: 'API rate limit approaching threshold',
-    message: 'The public API is currently at 85% of its rate limit. Consider implementing throttling or increasing capacity.',
-    severity: 'medium',
-    timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
-    recipient: {
-      id: 'r3',
-      name: 'Alex Morgan',
-      avatarUrl: 'https://i.pravatar.cc/150?img=4',
-      isOnline: true
-    },
-    isRead: false,
-    false_alarm: 30,
-    location: 'Public API Gateway',
-    description: 'Traffic appears to be legitimate but sustained well above normal levels for this time period.'
-  },
-  {
-    id: '4',
-    title: 'Memory usage warning',
-    message: 'Application server is experiencing elevated memory usage (87%). Consider investigating potential memory leaks.',
-    severity: 'medium',
-    timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(), // 3 hours ago
-    recipient: {
-      id: 'r4',
-      name: 'Leila Ahmed',
-      avatarUrl: 'https://i.pravatar.cc/150?img=5',
-      isOnline: true
-    },
-    isRead: false,
-    possible_death: 0,
-    false_alarm: 45,
-    location: 'App Server Node 7',
-    description: 'Memory usage has been gradually increasing over the past 48 hours without corresponding traffic increases.'
-  },
-  {
-    id: '5',
-    title: 'New feature deployment completed',
-    message: 'The user authentication system update has been successfully deployed to production. Monitor for any unexpected behavior.',
-    severity: 'low',
-    timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(), // 4 hours ago
-    recipient: {
-      id: 'r5',
-      name: 'Marcus Johnson',
-      avatarUrl: 'https://i.pravatar.cc/150?img=7',
-      isOnline: false
-    },
-    isRead: true,
-    false_alarm: 70,
-    location: 'Production Environment',
-    description: 'Deployment completed in 4 minutes and 32 seconds. All post-deployment tests passed successfully.'
-  },
-  {
-    id: '6',
-    title: 'Scheduled maintenance reminder',
-    message: 'Reminder: Database indexing maintenance is scheduled for tomorrow at 2 AM UTC. Expected downtime: 15-30 minutes.',
-    severity: 'low',
-    timestamp: new Date(Date.now() - 1000 * 60 * 300).toISOString(), // 5 hours ago
-    recipient: {
-      id: 'r6',
-      name: 'Elena Martinez',
-      avatarUrl: 'https://i.pravatar.cc/150?img=9',
-      isOnline: true
-    },
-    isRead: true,
-    false_alarm: 0,
-    location: 'Database Maintenance',
-    description: 'This is a routine maintenance operation that occurs monthly. All systems will automatically fail over to secondary instances.'
-  }
-];
+// Initial empty array for alerts
+const INITIAL_ALERTS: Alert[] = [];
 
 type ViewTab = 'all' | 'unread' | 'saved';
 
 const Index = () => {
-  const [alerts, setAlerts] = useState<Alert[]>(MOCK_ALERTS);
-  const [filteredAlerts, setFilteredAlerts] = useState<Alert[]>(MOCK_ALERTS);
+  const [alerts, setAlerts] = useState<Alert[]>(INITIAL_ALERTS);
+  const [filteredAlerts, setFilteredAlerts] = useState<Alert[]>(INITIAL_ALERTS);
   const [activeTab, setActiveTab] = useState<ViewTab>('all');
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -250,6 +144,21 @@ const Index = () => {
       });
     }
   };
+  
+  // Handle deleting an alert
+  const handleDelete = (alertId: string) => {
+    const alert = alerts.find(a => a.id === alertId);
+    
+    if (alert) {
+      // Remove the alert from the state
+      setAlerts(alerts.filter(a => a.id !== alertId));
+      
+      toast(`Alert deleted`, {
+        description: `The alert "${alert.title}" has been removed`,
+        duration: 3000,
+      });
+    }
+  };
 
   // Handle search input
   const handleSearch = (term: string) => {
@@ -356,15 +265,15 @@ const Index = () => {
             </div>
 
             <TabsContent value="all" className="mt-0">
-              {renderAlertList(filteredAlerts, handleConnect)}
+              {renderAlertList(filteredAlerts, handleConnect, handleDelete)}
             </TabsContent>
             
             <TabsContent value="unread" className="mt-0">
-              {renderAlertList(filteredAlerts, handleConnect)}
+              {renderAlertList(filteredAlerts, handleConnect, handleDelete)}
             </TabsContent>
             
             <TabsContent value="saved" className="mt-0">
-              {renderAlertList(filteredAlerts, handleConnect)}
+              {renderAlertList(filteredAlerts, handleConnect, handleDelete)}
             </TabsContent>
           </Tabs>
         </div>
@@ -374,7 +283,7 @@ const Index = () => {
 };
 
 // Helper function to render the alert list with proper animation
-const renderAlertList = (alerts: Alert[], onConnect: (id: string) => void) => {
+const renderAlertList = (alerts: Alert[], onConnect: (id: string) => void, onDelete: (id: string) => void) => {
   if (alerts.length === 0) {
     return <EmptyState />;
   }
@@ -392,6 +301,7 @@ const renderAlertList = (alerts: Alert[], onConnect: (id: string) => void) => {
           alert={alert}
           index={index}
           onConnect={onConnect}
+          onDelete={onDelete}
         />
       ))}
     </motion.div>

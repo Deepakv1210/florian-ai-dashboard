@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import SeverityIndicator from '@/components/SeverityIndicator';
 import RecipientBadge from '@/components/RecipientBadge';
-import { ExternalLink, Clock, Skull, BellOff, MapPin, FileText } from 'lucide-react';
+import { ExternalLink, Clock, Skull, BellOff, MapPin, FileText, Trash } from 'lucide-react';
 import { fadeInScale } from './animations';
 
 export type AlertSeverity = 'high' | 'medium' | 'low';
@@ -34,6 +34,7 @@ interface AlertCardProps {
   alert: Alert;
   index: number;
   onConnect: (alertId: string) => void;
+  onDelete: (alertId: string) => void;
   className?: string;
 }
 
@@ -41,6 +42,7 @@ const AlertCard: React.FC<AlertCardProps> = ({
   alert,
   index,
   onConnect,
+  onDelete,
   className
 }) => {
   const formattedTime = new Date(alert.timestamp).toLocaleString(undefined, {
@@ -78,9 +80,19 @@ const AlertCard: React.FC<AlertCardProps> = ({
               {alert.title}
             </h3>
           </div>
-          <div className="flex items-center text-muted-foreground">
-            <Clock className="h-3 w-3 mr-1" />
-            <span className="text-xs">{formattedTime}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center text-muted-foreground">
+              <Clock className="h-3 w-3 mr-1" />
+              <span className="text-xs">{formattedTime}</span>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+              onClick={() => onDelete(alert.id)}
+            >
+              <Trash className="h-3.5 w-3.5" />
+            </Button>
           </div>
         </CardHeader>
         
@@ -89,39 +101,43 @@ const AlertCard: React.FC<AlertCardProps> = ({
             {alert.message}
           </p>
           
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs border-t border-border/30 pt-3">
-            {alert.possible_death !== undefined && (
-              <div className="flex items-center gap-1.5">
-                <Skull className="h-3 w-3 text-severity-high" />
-                <span className="text-muted-foreground">Possible casualties: </span>
-                <span className="font-medium">{alert.possible_death}</span>
-              </div>
-            )}
-            
-            {alert.false_alarm !== undefined && (
-              <div className="flex items-center gap-1.5">
-                <BellOff className="h-3 w-3 text-muted-foreground" />
-                <span className="text-muted-foreground">False alarm rate: </span>
-                <span className="font-medium">{alert.false_alarm}%</span>
-              </div>
-            )}
-            
-            {alert.location && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3 text-blue-500" />
-                <span className="text-muted-foreground">Location: </span>
-                <span className="font-medium">{alert.location}</span>
-              </div>
-            )}
-            
-            {alert.description && (
-              <div className="flex items-center gap-1.5 col-span-2">
-                <FileText className="h-3 w-3 text-muted-foreground" />
-                <span className="text-muted-foreground">Details: </span>
-                <span className="font-medium">{alert.description}</span>
-              </div>
-            )}
-          </div>
+          {/* Only show the details section if at least one detail property exists */}
+          {(alert.possible_death !== undefined || alert.false_alarm !== undefined || 
+            alert.location || alert.description) && (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs border-t border-border/30 pt-3">
+              {alert.possible_death !== undefined && (
+                <div className="flex items-center gap-1.5">
+                  <Skull className="h-3 w-3 text-severity-high" />
+                  <span className="text-muted-foreground">Possible casualties: </span>
+                  <span className="font-medium">{alert.possible_death}</span>
+                </div>
+              )}
+              
+              {alert.false_alarm !== undefined && (
+                <div className="flex items-center gap-1.5">
+                  <BellOff className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">False alarm rate: </span>
+                  <span className="font-medium">{alert.false_alarm}%</span>
+                </div>
+              )}
+              
+              {alert.location && (
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="h-3 w-3 text-blue-500" />
+                  <span className="text-muted-foreground">Location: </span>
+                  <span className="font-medium">{alert.location}</span>
+                </div>
+              )}
+              
+              {alert.description && (
+                <div className="flex items-center gap-1.5 col-span-2">
+                  <FileText className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">Details: </span>
+                  <span className="font-medium">{alert.description}</span>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
         
         <CardFooter className="px-4 py-3 flex items-center justify-between bg-secondary/40 border-t border-border/50">
