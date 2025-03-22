@@ -15,17 +15,16 @@ import { staggerContainer } from '@/components/animations';
 // Initial empty array for alerts
 const INITIAL_ALERTS: Alert[] = [];
 
-// Dynamic API URL detection - FIXED to avoid incorrect paths
+// Dynamic API URL detection - Fixed to properly handle localhost
 const getApiUrl = () => {
-  // Check if we're running on deployed environments like Lovable
-  if (window.location.hostname.includes('lovable.app') || 
-      !window.location.hostname.includes('localhost')) {
-    console.log('Running in demo mode - Python API not accessible in deployment');
-    return 'demo';
+  // For local development
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000/api';
   }
   
-  // Local development - use the Python server
-  return 'http://localhost:5000/api';
+  // For deployed environments or when localhost is not accessible
+  console.log('Running in demo mode - Python API not accessible in deployment');
+  return 'demo';
 };
 
 // API URL for the Python server
@@ -81,6 +80,7 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiUnavailable, setApiUnavailable] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [showContent, setShowContent] = useState(false); // Only show content when we have alerts
 
   // Fetch alerts from the Python API
   const fetchAlerts = async () => {
@@ -89,6 +89,7 @@ const Index = () => {
       console.log('Using demo data - Python API not available in this environment');
       setAlerts(DEMO_ALERTS);
       setApiUnavailable(true);
+      setShowContent(true);
       return;
     }
     
@@ -121,6 +122,7 @@ const Index = () => {
       console.log('Successfully fetched alerts:', data);
       setAlerts(data);
       setApiUnavailable(false);
+      setShowContent(true);
     } catch (error) {
       console.error('Error fetching alerts:', error);
       
@@ -129,6 +131,7 @@ const Index = () => {
         console.log('Loading demo data due to API unavailability');
         setAlerts(DEMO_ALERTS);
         setApiUnavailable(true);
+        setShowContent(true);
         toast.error('Using demo data', {
           description: 'Could not connect to the API server. Showing demo data instead.',
         });
@@ -273,6 +276,33 @@ const Index = () => {
       duration: 3000,
     });
   };
+
+  // If no alerts have been loaded yet and we haven't decided if API is unavailable, show loading state
+  if (!showContent && !apiUnavailable) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header onSearch={handleSearch} onFilterClick={() => {}} />
+        <main className="flex-1 container max-w-5xl py-6 px-4 md:px-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-pulse flex flex-col items-center justify-center">
+              <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Waiting for alerts...</h2>
+              <p className="text-muted-foreground mb-4">
+                Checking for emergency alerts
+              </p>
+              <Button 
+                onClick={fetchAlerts} 
+                disabled={isLoading}
+                className="mt-2"
+              >
+                {isLoading ? 'Loading...' : 'Check Now'}
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

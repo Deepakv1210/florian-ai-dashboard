@@ -37,10 +37,15 @@ def get_alerts():
 @app.route('/api/alerts', methods=['POST'])
 def add_alert():
     try:
+        print("Received POST request to /api/alerts")
+        print(f"Request headers: {request.headers}")
+        
         # Get data from request
         data = request.json.get('response', None)
         if data is None:
             data = request.json
+            
+        print(f"Received alert data: {data}")
         
         # Calculate severity
         severity = calculate_severity(data)
@@ -66,6 +71,8 @@ def add_alert():
         
         # Add to our store (at beginning of list)
         alerts.insert(0, new_alert)
+        
+        print(f"Created new alert: {new_alert}")
         
         response = jsonify({
             "success": True,
