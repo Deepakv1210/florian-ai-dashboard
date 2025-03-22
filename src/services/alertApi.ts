@@ -1,17 +1,16 @@
 
+// NOTE: This file is kept for type definitions, but the actual API calls are now
+// made directly to the Python server in Index.tsx
+
 import { Alert, AlertSeverity } from '@/components/AlertCard';
 
-// Store alerts in memory (temporary solution for demo purposes)
-let alertsStore: Alert[] = [];
-
-// Function to get all alerts
+// Function to get all alerts (for type reference only)
 export const getAlerts = (): Alert[] => {
-  return [...alertsStore];
+  return [];
 };
 
-// Function to add a new alert from external API request
+// Function to add a new alert (for type reference only)
 export const addAlert = (alertData: any): Alert => {
-  // Calculate severity based on data
   const severity = calculateSeverity(alertData);
   
   // Create a new alert
@@ -33,17 +32,12 @@ export const addAlert = (alertData: any): Alert => {
     description: alertData.description
   };
   
-  // Add to our store
-  alertsStore = [newAlert, ...alertsStore];
-  
   return newAlert;
 };
 
-// Function to delete an alert
+// Function to delete an alert (for type reference only)
 export const deleteAlert = (alertId: string): boolean => {
-  const initialLength = alertsStore.length;
-  alertsStore = alertsStore.filter(alert => alert.id !== alertId);
-  return alertsStore.length < initialLength;
+  return true;
 };
 
 // Helper function to calculate severity

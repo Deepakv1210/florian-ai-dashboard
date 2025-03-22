@@ -11,10 +11,12 @@ import AlertCard, { Alert, AlertSeverity } from '@/components/AlertCard';
 import Header from '@/components/Header';
 import EmptyState from '@/components/EmptyState';
 import { staggerContainer } from '@/components/animations';
-import { getAlerts, deleteAlert } from '@/services/alertApi';
 
 // Initial empty array for alerts
 const INITIAL_ALERTS: Alert[] = [];
+
+// API URL for the Python server
+const API_URL = 'http://localhost:5000/api';
 
 type ViewTab = 'all' | 'unread' | 'saved';
 
@@ -24,10 +26,51 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<ViewTab>('all');
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch alerts from the API
-  const fetchAlerts = () => {
-    setAlerts(getAlerts());
+  // Fetch alerts from the Python API
+  const fetchAlerts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/alerts`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch alerts');
+      }
+      
+      const data = await response.json();
+      setAlerts(data);
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+      toast.error('Failed to fetch alerts', {
+        description: 'Please make sure the Python server is running',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete an alert
+  const deleteAlert = async (alertId: string) => {
+    try {
+      const response = await fetch(`${API_URL}/alerts/${alertId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete alert');
+      }
+      
+      // Update state to reflect the deletion
+      setAlerts(alerts.filter(a => a.id !== alertId));
+      
+      toast('Alert deleted', {
+        description: 'The alert has been removed',
+      });
+    } catch (error) {
+      console.error('Error deleting alert:', error);
+      toast.error('Failed to delete alert');
+    }
   };
 
   // Set up polling to check for new alerts
@@ -101,16 +144,8 @@ const Index = () => {
     const alert = alerts.find(a => a.id === alertId);
     
     if (alert) {
-      // Remove the alert using our API service
+      // Remove the alert using our API
       deleteAlert(alertId);
-      
-      // Update state to reflect the deletion
-      setAlerts(alerts.filter(a => a.id !== alertId));
-      
-      toast(`Alert deleted`, {
-        description: `The alert "${alert.title}" has been removed`,
-        duration: 3000,
-      });
     }
   };
 
@@ -184,8 +219,9 @@ const Index = () => {
                   size="sm"
                   className="h-8"
                   onClick={fetchAlerts}
+                  disabled={isLoading}
                 >
-                  Refresh Alerts
+                  {isLoading ? 'Loading...' : 'Refresh Alerts'}
                 </Button>
                 
                 <DropdownMenu>
