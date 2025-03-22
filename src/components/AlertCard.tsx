@@ -97,47 +97,39 @@ const AlertCard: React.FC<AlertCardProps> = ({
         </CardHeader>
         
         <CardContent className="pb-3 pt-0 px-4">
-          <p className="text-sm text-muted-foreground mb-3">
-            {alert.message}
-          </p>
-          
-          {/* Only show the details section if at least one detail property exists */}
-          {(alert.possible_death !== undefined || alert.false_alarm !== undefined || 
-            alert.location || alert.description) && (
-            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs border-t border-border/30 pt-3">
-              {alert.possible_death !== undefined && (
-                <div className="flex items-center gap-1.5">
-                  <Skull className="h-3 w-3 text-severity-high" />
-                  <span className="text-muted-foreground">Possible casualties: </span>
-                  <span className="font-medium">{alert.possible_death}</span>
-                </div>
-              )}
-              
-              {alert.false_alarm !== undefined && (
-                <div className="flex items-center gap-1.5">
-                  <BellOff className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">False alarm rate: </span>
-                  <span className="font-medium">{alert.false_alarm}%</span>
-                </div>
-              )}
-              
-              {alert.location && (
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="h-3 w-3 text-blue-500" />
-                  <span className="text-muted-foreground">Location: </span>
-                  <span className="font-medium">{alert.location}</span>
-                </div>
-              )}
-              
-              {alert.description && (
-                <div className="flex items-center gap-1.5 col-span-2">
-                  <FileText className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-muted-foreground">Details: </span>
-                  <span className="font-medium">{alert.description}</span>
-                </div>
-              )}
-            </div>
-          )}
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+            {alert.possible_death !== undefined && (
+              <div className="flex items-center gap-1.5">
+                <Skull className="h-3 w-3 text-severity-high" />
+                <span className="text-muted-foreground">Possible casualties: </span>
+                <span className="font-medium">{alert.possible_death}</span>
+              </div>
+            )}
+            
+            {alert.false_alarm !== undefined && (
+              <div className="flex items-center gap-1.5">
+                <BellOff className="h-3 w-3 text-muted-foreground" />
+                <span className="text-muted-foreground">False alarm rate: </span>
+                <span className="font-medium">{alert.false_alarm}%</span>
+              </div>
+            )}
+            
+            {alert.location && (
+              <div className="flex items-center gap-1.5">
+                <MapPin className="h-3 w-3 text-blue-500" />
+                <span className="text-muted-foreground">Location: </span>
+                <span className="font-medium">{alert.location}</span>
+              </div>
+            )}
+            
+            {alert.description && (
+              <div className="flex items-center gap-1.5 col-span-2">
+                <FileText className="h-3 w-3 text-muted-foreground" />
+                <span className="text-muted-foreground">Details: </span>
+                <span className="font-medium">{alert.description}</span>
+              </div>
+            )}
+          </div>
         </CardContent>
         
         <CardFooter className="px-4 py-3 flex items-center justify-between bg-secondary/40 border-t border-border/50">
