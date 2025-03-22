@@ -4,6 +4,7 @@ from flask_cors import CORS
 import json
 import os
 import time
+import ssl
 
 app = Flask(__name__)
 # Configure CORS with more explicit settings to allow all origins
@@ -143,5 +144,17 @@ def health_check():
 
 if __name__ == '__main__':
     print("Python API server running at http://localhost:5000")
-    # Make the server accessible from any network interface
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    # Check if we have SSL context for HTTPS
+    cert_file = os.environ.get('SSL_CERT_FILE')
+    key_file = os.environ.get('SSL_KEY_FILE')
+    
+    if cert_file and key_file and os.path.exists(cert_file) and os.path.exists(key_file):
+        print(f"SSL certificate found. Starting server with HTTPS support")
+        ssl_context = (cert_file, key_file)
+        # Make the server accessible from any network interface with SSL
+        app.run(host='0.0.0.0', port=5000, ssl_context=ssl_context, debug=True)
+    else:
+        print("No SSL certificate found. Starting server with HTTP only")
+        # Make the server accessible from any network interface
+        app.run(host='0.0.0.0', port=5000, debug=True)

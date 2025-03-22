@@ -14,23 +14,23 @@ import { staggerContainer } from '@/components/animations';
 // Initial empty array for alerts
 const INITIAL_ALERTS: Alert[] = [];
 
-// Dynamic API URL detection - Fixed to properly handle localhost
+// Dynamic API URL detection - Handle HTTPS properly
 const getApiUrl = () => {
+  const protocol = window.location.protocol; // 'http:' or 'https:'
+  
   // For local development
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:5000/api';
   }
   
-  // For deployed environments - only use API mode, no demo data
-  console.log('Using API endpoint from remote host');
-  return `http://${window.location.hostname}:5000/api`;
+  // For deployed environments - match the protocol of the current page (HTTP or HTTPS)
+  console.log(`Using API endpoint from remote host with ${protocol} protocol`);
+  return `${protocol}//${window.location.hostname}:5000/api`;
 };
 
 // API URL for the Python server
 const API_URL = getApiUrl();
 console.log(`API URL set to: ${API_URL}`);
-
-// Remove all demo alerts - we only want to show real alerts from the server
 
 type ViewTab = 'all' | 'unread' | 'saved';
 
@@ -230,6 +230,19 @@ const Index = () => {
               >
                 {isLoading ? 'Loading...' : 'Check Now'}
               </Button>
+              {apiError && (
+                <div className="mt-4 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md w-full max-w-md">
+                  <div className="flex items-center">
+                    <AlertTriangle className="h-5 w-5 mr-2" />
+                    <span className="font-medium">Connection Error</span>
+                  </div>
+                  <p className="text-sm mt-1">{apiError}</p>
+                  <p className="text-sm mt-2">
+                    <strong>Mixed Content Error:</strong> If you're seeing a Mixed Content error, your browser is blocking HTTP requests from HTTPS pages.
+                    Try running the Python server with HTTPS or access this page via HTTP instead.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </main>
