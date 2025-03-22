@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -12,37 +11,10 @@ import AlertCard, { Alert, AlertSeverity } from '@/components/AlertCard';
 import Header from '@/components/Header';
 import EmptyState from '@/components/EmptyState';
 import { staggerContainer } from '@/components/animations';
+import { getAlerts, deleteAlert } from '@/services/alertApi';
 
 // Initial empty array for alerts
 const INITIAL_ALERTS: Alert[] = [];
-
-// Sample request data for testing
-const SAMPLE_REQUESTS = [
-  {
-    response: {
-      possible_death: 5,
-      false_alarm: 15,
-      location: "Downtown District",
-      description: "Fire outbreak at commercial building. Emergency services dispatched."
-    }
-  },
-  {
-    response: {
-      possible_death: 0,
-      false_alarm: 60,
-      location: "West Highway",
-      description: "Vehicle collision reported. Minor injuries suspected."
-    }
-  },
-  {
-    response: {
-      possible_death: 12,
-      false_alarm: 5,
-      location: "Central Hospital",
-      description: "Critical infrastructure failure. Immediate evacuation required."
-    }
-  }
-];
 
 type ViewTab = 'all' | 'unread' | 'saved';
 
@@ -53,69 +25,22 @@ const Index = () => {
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Function to add a new alert from server response
-  const addNewAlert = (responseData: any) => {
-    const { response } = responseData;
-    
-    // Generate a new alert from the response
-    const newAlert: Alert = {
-      id: `alert-${Date.now()}`, // Generate a unique ID
-      title: response.description?.split('.')[0] || "New Alert", // Use first sentence of description as title
-      message: response.description || "New alert received from the server",
-      severity: calculateSeverity(response), // Helper function to determine severity
-      timestamp: new Date().toISOString(),
-      recipient: {
-        id: `recipient-${Date.now()}`,
-        name: "Emergency Response Team", // This should come from your user system
-        isOnline: true
-      },
-      isRead: false,
-      possible_death: response.possible_death,
-      false_alarm: response.false_alarm,
-      location: response.location,
-      description: response.description
-    };
-    
-    // Add the new alert to the state
-    setAlerts(prevAlerts => [newAlert, ...prevAlerts]);
-    
-    // Show a toast notification
-    toast.info(`New alert received: ${newAlert.title}`, {
-      description: newAlert.description || newAlert.message,
-      duration: 4000,
-    });
-  };
-  
-  // Function to manually trigger a test alert (for development/testing)
-  const triggerTestAlert = () => {
-    // Get a random sample request
-    const randomIndex = Math.floor(Math.random() * SAMPLE_REQUESTS.length);
-    const sampleRequest = SAMPLE_REQUESTS[randomIndex];
-    
-    // Process the sample request
-    addNewAlert(sampleRequest);
-  };
-  
-  // Helper function to calculate severity based on response data
-  const calculateSeverity = (response: any): AlertSeverity => {
-    if (response.possible_death && response.possible_death > 0) {
-      return 'high';
-    } else if (response.false_alarm && response.false_alarm < 30) {
-      return 'medium';
-    } else {
-      return 'low';
-    }
+  // Fetch alerts from the API
+  const fetchAlerts = () => {
+    setAlerts(getAlerts());
   };
 
-  // Simulate receiving new alerts (this would be replaced with your actual API call)
+  // Set up polling to check for new alerts
   useEffect(() => {
-    // This is just a simulation for testing - uncomment to enable automatic alerts
-    // const interval = setInterval(() => {
-    //   const randomIndex = Math.floor(Math.random() * SAMPLE_REQUESTS.length);
-    //   addNewAlert(SAMPLE_REQUESTS[randomIndex]);
-    // }, 30000); // New alert every 30 seconds
+    // Initial fetch
+    fetchAlerts();
     
-    // return () => clearInterval(interval);
+    // Set up polling
+    const interval = setInterval(() => {
+      fetchAlerts();
+    }, 5000); // Check every 5 seconds
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Filter alerts based on active tab, severity filter, and search term
@@ -176,7 +101,10 @@ const Index = () => {
     const alert = alerts.find(a => a.id === alertId);
     
     if (alert) {
-      // Remove the alert from the state
+      // Remove the alert using our API service
+      deleteAlert(alertId);
+      
+      // Update state to reflect the deletion
       setAlerts(alerts.filter(a => a.id !== alertId));
       
       toast(`Alert deleted`, {
@@ -250,14 +178,14 @@ const Index = () => {
               </TabsList>
               
               <div className="flex items-center gap-2">
-                {/* Test button for triggering sample alerts */}
+                {/* Manual Refresh Button */}
                 <Button
                   variant="outline"
                   size="sm"
                   className="h-8"
-                  onClick={triggerTestAlert}
+                  onClick={fetchAlerts}
                 >
-                  Test Alert
+                  Refresh Alerts
                 </Button>
                 
                 <DropdownMenu>
