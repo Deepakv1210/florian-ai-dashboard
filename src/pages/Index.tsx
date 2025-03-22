@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import Header from '@/components/Header';
 import EmptyState from '@/components/EmptyState';
 import { staggerContainer } from '@/components/animations';
 
-// Mock data for alerts
+// Initial mock data for alerts
 const MOCK_ALERTS: Alert[] = [
   {
     id: '1',
@@ -130,6 +130,73 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<ViewTab>('all');
   const [severityFilter, setSeverityFilter] = useState<AlertSeverity | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Function to add a new alert from server response
+  const addNewAlert = (responseData: any) => {
+    const { response } = responseData;
+    
+    // Generate a new alert from the response
+    const newAlert: Alert = {
+      id: `alert-${Date.now()}`, // Generate a unique ID
+      title: "New Alert", // You might want to generate this based on response data
+      message: "New alert received from the server", // Or extract from response
+      severity: calculateSeverity(response), // Helper function to determine severity
+      timestamp: new Date().toISOString(),
+      recipient: {
+        id: `recipient-${Date.now()}`,
+        name: "Alert Recipient", // This should come from your user system
+        isOnline: true
+      },
+      isRead: false,
+      possible_death: response.possible_death,
+      false_alarm: response.false_alarm,
+      location: response.location,
+      description: response.description
+    };
+    
+    // Add the new alert to the state
+    setAlerts(prevAlerts => [newAlert, ...prevAlerts]);
+    
+    // Show a toast notification
+    toast.info(`New alert received: ${newAlert.title}`, {
+      description: newAlert.description || newAlert.message,
+      duration: 4000,
+    });
+  };
+  
+  // Helper function to calculate severity based on response data
+  const calculateSeverity = (response: any): AlertSeverity => {
+    if (response.possible_death && response.possible_death > 0) {
+      return 'high';
+    } else if (response.false_alarm && response.false_alarm < 30) {
+      return 'medium';
+    } else {
+      return 'low';
+    }
+  };
+
+  // Simulate receiving new alerts (this would be replaced with your actual API call)
+  useEffect(() => {
+    // This is just a simulation - replace with your actual API implementation
+    const simulateIncomingAlert = () => {
+      // Example server response format
+      const mockServerResponse = {
+        response: {
+          possible_death: Math.floor(Math.random() * 10),
+          false_alarm: Math.floor(Math.random() * 100),
+          location: "System Zone " + Math.floor(Math.random() * 10),
+          description: "Simulated alert with details about the situation."
+        }
+      };
+      
+      // Process the response as if it came from the server
+      addNewAlert(mockServerResponse);
+    };
+    
+    // For demo purposes - uncomment to test
+    // const interval = setInterval(simulateIncomingAlert, 30000); // New alert every 30 seconds
+    // return () => clearInterval(interval);
+  }, []);
 
   // Filter alerts based on active tab, severity filter, and search term
   const filterAlerts = () => {
