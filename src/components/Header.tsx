@@ -36,6 +36,15 @@ const Header: React.FC<HeaderProps> = ({
             <p className="text-sm text-muted-foreground">Manage and respond to alerts</p>
           </div>
         </div>
+
+        <figure className="mr-4">
+  <img
+    className="h-10"
+    src="https://ems.tamu.edu/wp-content/uploads/2023/06/Cropped-all-white-horizontal-400x56.png"
+    alt="TAMU EMS Logo"
+  />
+</figure>
+
         
         <div className="flex items-center gap-3">
           <div className="relative max-w-xs w-full">
