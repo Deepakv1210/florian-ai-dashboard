@@ -249,7 +249,7 @@ def calculate_severity(data):
 ######################################
 # LLM Logic 
 ######################################
-def generate_data(data, combined_list):
+def generate_data(combined_list):
     # Use Google's Generative AI with the provided API key
     client = genai.Client(api_key="AIzaSyCQaeRRWg7UTTRUbSRfwYZ6UP_W5klge7w")
 
@@ -325,6 +325,156 @@ def generate_data(data, combined_list):
                 "description": "Error processing emergency call. Please review manually."
             }
         }
+def generate_data_custom(combined_list):
+    # Use Google's Generative AI with the provided API key
+    client = genai.Client(api_key="AIzaSyCQaeRRWg7UTTRUbSRfwYZ6UP_W5klge7w")
+
+    si_text1 = """You are an expert emergency call analysis assistant. Your task is to analyze 911 call transcripts and extract critical information from the conversation. Focus on identifying potential life-threatening situations, possible false alarms, and any location details shared by the caller. Summarize the incident concisely.
+
+    ⚠️ Important Safety Considerations:
+
+    It is acceptable if a potential false alarm is treated as a real incident. However, it is not acceptable to classify a genuine emergency as a false alarm.
+
+    Similarly, it is acceptable if a potential death is flagged but later turns out not to be fatal. However, never classify a potential fatal situation as \"no death risk\" unless it is explicitly clear."""
+
+    msg1_text1 = types.Part.from_text(text=combined_list)
+    model = "gemini-2.0-flash-001"
+    contents = [
+        types.Content(
+            role="user",
+            parts=[msg1_text1]
+        ),
+    ]
+
+    generate_content_config = types.GenerateContentConfig(
+        temperature=1,
+        top_p=0.95,
+        max_output_tokens=8192,
+        response_modalities=["TEXT"],
+        safety_settings=[
+            types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF"),
+            types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF"),
+            types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF"),
+            types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="OFF"),
+        ],
+        response_mime_type="application/json",
+        response_schema={
+            "type": "OBJECT",
+            "properties": {
+                "response": {
+                    "type": "OBJECT",
+                    "required": ["possible_death","false_alarm","location","description"],
+                    "properties": {
+                        "possible_death": {"type":"NUMBER"},
+                        "false_alarm": {"type":"NUMBER"},
+                        "location": {"type":"STRING"},
+                        "description": {"type":"STRING"}
+                    }
+                }
+            }
+        },
+        system_instruction=[types.Part.from_text(text=si_text1)],
+    )
+
+    llm_output = ""
+    for chunk in client.models.generate_content_stream(
+        model=model,
+        contents=contents,
+        config=generate_content_config,
+    ):
+        llm_output += chunk.text
+
+    try:
+        # Parse the JSON output
+        result = json.loads(llm_output)
+        print("Successfully parsed LLM output as JSON:", result)
+        return result
+    except json.JSONDecodeError as e:
+        print(f"Error parsing LLM output as JSON: {e}")
+        print(f"Raw output: {llm_output}")
+        # Return a default structure in case of parsing error
+        return {
+            "response": {
+                "possible_death": 0,
+                "false_alarm": 90,
+                "location": "Unknown",
+                "description": "Error processing emergency call. Please review manually."
+            }
+        }
+    
+def generate_data_custom(combined_list):
+  client = genai.Client(
+      vertexai=True,
+      project="528054701331",
+      location="us-central1",
+  )
+
+  msg1_text1 = types.Part.from_text(text=combined_list)
+  si_text1 = """You are an expert emergency call analysis assistant. Your task is to analyze 911 call transcripts and extract critical information from the conversation. Focus on identifying potential life-threatening situations, possible false alarms, and any location details shared by the caller. Summarize the incident concisely. Give response to the location in two to three words. 
+
+⚠️Important Safety Considerations:
+
+It is acceptable if a potential false alarm is treated as a real incident. However, it is not acceptable to classify a genuine emergency as a false alarm.
+
+Similarly, it is acceptable if a potential death is flagged but later turns out not to be fatal. However, never classify a potential fatal situation as \"no death risk\" unless it is explicitly clear."""
+
+  model = "projects/528054701331/locations/us-central1/endpoints/2458724603497807872"
+  contents = [
+    types.Content(
+      role="user",
+      parts=[
+        msg1_text1
+      ]
+    ),
+  ]
+  generate_content_config = types.GenerateContentConfig(
+    temperature = 1,
+    top_p = 0.95,
+    max_output_tokens = 8192,
+    response_modalities = ["TEXT"],
+    safety_settings = [types.SafetySetting(
+      category="HARM_CATEGORY_HATE_SPEECH",
+      threshold="OFF"
+    ),types.SafetySetting(
+      category="HARM_CATEGORY_DANGEROUS_CONTENT",
+      threshold="OFF"
+    ),types.SafetySetting(
+      category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+      threshold="OFF"
+    ),types.SafetySetting(
+      category="HARM_CATEGORY_HARASSMENT",
+      threshold="OFF"
+    )],
+    response_mime_type = "application/json",
+    response_schema = {"type":"OBJECT","properties":{"response":{"type":"OBJECT","required":["possible_death","false_alarm","location","description"],"properties":{"possible_death":{"type":"NUMBER"},"false_alarm":{"type":"NUMBER"},"location":{"type":"STRING"},"description":{"type":"STRING"}}}}},
+    system_instruction=[types.Part.from_text(text=si_text1)],
+  )
+
+  llm_output = ""
+  for chunk in client.models.generate_content_stream(
+    model = model,
+    contents = contents,
+    config = generate_content_config,
+    ):
+        llm_output += chunk.text
+  try:
+    # Parse the JSON output
+    result = json.loads(llm_output)
+    print("Successfully parsed LLM output as JSON:", result)
+    return result
+  except json.JSONDecodeError as e:
+    print(f"Error parsing LLM output as JSON: {e}")
+    print(f"Raw output: {llm_output}")
+    # Return a default structure in case of parsing error
+    return {
+        "response": {
+            "possible_death": 0,
+            "false_alarm": 90,
+            "location": "Unknown",
+            "description": "Error processing emergency call. Please review manually."
+        }
+    }
+  
 
 def run_llm(data):
     print("🚀 Starting LLM with data in background")
@@ -337,7 +487,9 @@ def run_llm(data):
     combined_string = "\n".join(content_data)
     print("🚀 combined list:\n", combined_string)
 
-    llm_output = generate_data(data, combined_string)
+    # llm_output = generate_data(combined_string)
+    llm_output = generate_data_custom(combined_string)
+
     print("🚀 LLM output:\n", llm_output)
     
     # Create and add a new alert from the LLM output
