@@ -31,11 +31,21 @@ const LocationMap: React.FC<LocationMapProps> = ({
 
     const geocodeLocation = async () => {
       try {
+        console.log('Geocoding location:', location);
+        
+        // Clean the location string for better geocoding results
+        const searchQuery = encodeURIComponent(location.trim());
+        
+        // Add more specific location context for better results
+        const enhancedQuery = searchQuery.includes('Texas A&M') 
+          ? searchQuery 
+          : `${searchQuery}, College Station, Texas`;
+        
+        console.log('Enhanced query:', enhancedQuery);
+        
         // Geocode the location string to get coordinates
         const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-            location
-          )}.json?access_token=${mapboxgl.accessToken}&limit=1`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${enhancedQuery}.json?access_token=${mapboxgl.accessToken}&limit=1`
         );
         
         if (!response.ok) {
@@ -43,9 +53,11 @@ const LocationMap: React.FC<LocationMapProps> = ({
         }
         
         const data = await response.json();
+        console.log('Geocoding response:', data);
         
         if (data.features && data.features.length > 0) {
           const [lng, lat] = data.features[0].center;
+          console.log('Found coordinates:', lng, lat);
           
           if (map.current) {
             map.current.remove();
@@ -56,7 +68,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
             container: mapContainer.current,
             style: 'mapbox://styles/mapbox/streets-v12',
             center: [lng, lat],
-            zoom: 14,
+            zoom: 15,
           });
           
           map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -70,11 +82,12 @@ const LocationMap: React.FC<LocationMapProps> = ({
             setMapLoaded(true);
           });
         } else {
-          setError('Location not found');
+          console.error('Location not found in geocoding response');
+          setError(`Unable to find location: ${location}`);
         }
       } catch (err) {
         console.error('Error loading map:', err);
-        setError('Error loading map');
+        setError(`Error loading map for: ${location}`);
       }
     };
 
@@ -97,7 +110,7 @@ const LocationMap: React.FC<LocationMapProps> = ({
       {error ? (
         <div className="flex items-center justify-center p-4 h-[180px] text-sm text-muted-foreground">
           <MapPin className="h-4 w-4 mr-2 text-maroon-600" />
-          Unable to display map for: {location}
+          {error}
         </div>
       ) : (
         <>
