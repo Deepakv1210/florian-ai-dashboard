@@ -1,14 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import SeverityIndicator from '@/components/SeverityIndicator';
 import RecipientBadge from '@/components/RecipientBadge';
-import { Clock, Skull, BellOff, MapPin, FileText, Trash, Map } from 'lucide-react';
+import { Clock, Skull, BellOff, MapPin, FileText, Trash } from 'lucide-react';
 import { fadeInScale } from './animations';
-import LocationMap from './LocationMap';
 export type AlertSeverity = 'high' | 'medium' | 'low';
 
 export interface Alert {
@@ -44,7 +43,6 @@ const AlertCard: React.FC<AlertCardProps> = ({
   onDelete,
   className
 }) => {
-  const [showMap, setShowMap] = useState(false);
   const formattedTime = new Date(alert.timestamp).toLocaleString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -58,8 +56,10 @@ const AlertCard: React.FC<AlertCardProps> = ({
     low: 'border-severity-low/10 bg-severity-low/5'
   };
 
-  const toggleMap = () => {
-    setShowMap(!showMap);
+  const severityTextStyles = {
+    high: 'text-severity-high font-medium',
+    medium: 'text-severity-medium font-medium',
+    low: 'text-severity-low font-medium'
   };
 
   const hasLocation = !!alert.location && alert.location.trim() !== '';
@@ -127,12 +127,6 @@ const AlertCard: React.FC<AlertCardProps> = ({
                 <span className="font-medium">{alert.location}</span>
               </div>
             )}
-          
-            {showMap && hasLocation && (
-              <div className="col-span-2 mt-2">
-                <LocationMap location={alert.location} onClose={() => setShowMap(false)} />
-              </div>
-            )}
             
             {alert.description && (
               <div className="flex items-center gap-1.5 col-span-2">
@@ -141,6 +135,15 @@ const AlertCard: React.FC<AlertCardProps> = ({
                 <span className="font-medium">{alert.description}</span>
               </div>
             )}
+            
+            <div className="col-span-2 mt-2 py-1.5 px-3 rounded-md bg-background/50 border border-border/50">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground text-xs">Severity:</span>
+                <span className={cn("text-xs", severityTextStyles[alert.severity])}>
+                  {alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1)}
+                </span>
+              </div>
+            </div>
           </div>
         </CardContent>
         
@@ -150,18 +153,6 @@ const AlertCard: React.FC<AlertCardProps> = ({
             avatarUrl={alert.recipient.avatarUrl}
             isOnline={alert.recipient.isOnline}
           />
-          
-          {hasLocation && (
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="h-8 px-3 rounded-full text-xs bg-purple-700 hover:bg-purple-800"
-              onClick={toggleMap}
-            >
-              <Map className="h-3 w-3 mr-1" />
-              {showMap ? 'Hide Map' : 'View Map'}
-            </Button>
-          )}
         </CardFooter>
       </Card>
     </motion.div>

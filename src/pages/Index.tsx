@@ -12,10 +12,8 @@ import Header from '@/components/Header';
 import EmptyState from '@/components/EmptyState';
 import { staggerContainer } from '@/components/animations';
 
-// Initial empty array for alerts
 const INITIAL_ALERTS: Alert[] = [];
 
-// API URL for the Python server
 const API_URL = 'http://localhost:5000/api';
 
 type ViewTab = 'all' | 'unread' | 'saved';
@@ -28,7 +26,6 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch alerts from the Python API
   const fetchAlerts = async () => {
     try {
       setIsLoading(true);
@@ -50,7 +47,6 @@ const Index = () => {
     }
   };
 
-  // Delete an alert
   const deleteAlert = async (alertId: string) => {
     try {
       const response = await fetch(`${API_URL}/alerts/${alertId}`, {
@@ -61,7 +57,6 @@ const Index = () => {
         throw new Error('Failed to delete alert');
       }
       
-      // Update state to reflect the deletion
       setAlerts(alerts.filter(a => a.id !== alertId));
       
       toast('Alert deleted', {
@@ -73,37 +68,29 @@ const Index = () => {
     }
   };
 
-  // Set up polling to check for new alerts
   useEffect(() => {
-    // Initial fetch
     fetchAlerts();
     
-    // Set up polling
     const interval = setInterval(() => {
       fetchAlerts();
-    }, 5000); // Check every 5 seconds
+    }, 5000);
     
     return () => clearInterval(interval);
   }, []);
 
-  // Filter alerts based on active tab, severity filter, and search term
   const filterAlerts = () => {
     let filtered = [...alerts];
     
-    // Tab filtering
     if (activeTab === 'unread') {
       filtered = filtered.filter(alert => !alert.isRead);
     } else if (activeTab === 'saved') {
-      // For this demo, we'll just show a subset as "saved"
       filtered = filtered.filter((_, index) => index % 3 === 0);
     }
     
-    // Severity filtering
     if (severityFilter !== 'all') {
       filtered = filtered.filter(alert => alert.severity === severityFilter);
     }
     
-    // Search term filtering
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -117,17 +104,14 @@ const Index = () => {
     setFilteredAlerts(filtered);
   };
 
-  // Apply filters when dependencies change
   React.useEffect(() => {
     filterAlerts();
   }, [activeTab, severityFilter, searchTerm, alerts]);
 
-  // Handle connecting to a recipient
   const handleConnect = (alertId: string) => {
     const alert = alerts.find(a => a.id === alertId);
     
     if (alert) {
-      // Mark alert as read
       setAlerts(alerts.map(a => 
         a.id === alertId ? { ...a, isRead: true } : a
       ));
@@ -138,26 +122,21 @@ const Index = () => {
       });
     }
   };
-  
-  // Handle deleting an alert
+
   const handleDelete = (alertId: string) => {
     const alert = alerts.find(a => a.id === alertId);
     
     if (alert) {
-      // Remove the alert using our API
       deleteAlert(alertId);
     }
   };
 
-  // Handle search input
   const handleSearch = (term: string) => {
     setSearchTerm(term);
   };
 
-  // Get count of unread alerts
   const unreadCount = alerts.filter(alert => !alert.isRead).length;
 
-  // Mark all as read
   const markAllAsRead = () => {
     setAlerts(alerts.map(alert => ({ ...alert, isRead: true })));
     toast('All alerts marked as read', {
@@ -170,7 +149,6 @@ const Index = () => {
       <Header 
         onSearch={handleSearch}
         onFilterClick={() => {
-          // Toggle through severity filters
           const options: (AlertSeverity | 'all')[] = ['all', 'high', 'medium', 'low'];
           const currentIndex = options.indexOf(severityFilter);
           const nextIndex = (currentIndex + 1) % options.length;
@@ -213,7 +191,6 @@ const Index = () => {
               </TabsList>
               
               <div className="flex items-center gap-2">
-                {/* Manual Refresh Button */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -282,7 +259,6 @@ const Index = () => {
   );
 };
 
-// Helper function to render the alert list with proper animation
 const renderAlertList = (alerts: Alert[], onConnect: (id: string) => void, onDelete: (id: string) => void) => {
   if (alerts.length === 0) {
     return <EmptyState />;
