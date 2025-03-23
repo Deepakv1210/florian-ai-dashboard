@@ -487,8 +487,8 @@ def run_llm(data):
     combined_string = "\n".join(content_data)
     print("🚀 combined list:\n", combined_string)
 
-    # llm_output = generate_data(combined_string)
-    llm_output = generate_data_custom(combined_string)
+    llm_output = generate_data(combined_string)
+    #llm_output = generate_data_custom(combined_string)
 
     print("🚀 LLM output:\n", llm_output)
     
