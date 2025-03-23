@@ -1,13 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { AlertTriangle, ChevronDown, Bookmark, CheckCheck, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import AlertCard, { Alert, AlertSeverity } from '@/components/AlertCard';
+import AlertCardWrapper from '@/components/AlertCardWrapper';
+import { Alert, AlertSeverity } from '@/components/AlertCard';
 import Header from '@/components/Header';
 import EmptyState from '@/components/EmptyState';
 import { staggerContainer } from '@/components/animations';
@@ -76,9 +77,7 @@ const Index = () => {
         return;
       }
 
-      // Mark alert as read
-      // In a real app, we'd make an API call to update the alert status
-      // For this demo, we'll assume it's read after connecting
+      // Mark alert as read (in a real app, update via API)
       toast.success(`Connecting to ${alert.recipient.name}`, {
         description: `Establishing connection for alert: ${alert.title}`,
         duration: 3000,
@@ -102,51 +101,10 @@ const Index = () => {
   // Mark all as read
   const markAllAsRead = () => {
     // In a real app, we'd make an API call to update all alerts
-    // For this demo, we'll just show a toast
     toast('All alerts marked as read', {
       duration: 3000,
     });
   };
-
-  // If we're still loading the initial data, show a loading screen
-  if (isInitialLoad) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header onSearch={handleSearch} onFilterClick={() => {}} />
-        <main className="flex-1 container max-w-5xl py-6 px-4 md:px-6 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-pulse flex flex-col items-center justify-center">
-              <AlertTriangle className="h-12 w-12 text-muted-foreground mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Waiting for alerts...</h2>
-              <p className="text-muted-foreground mb-4">
-                Checking for emergency alerts from the server
-              </p>
-              <Button 
-                onClick={fetchAlerts} 
-                disabled={isLoading}
-                className="mt-2"
-              >
-                {isLoading ? 'Loading...' : 'Check Now'}
-              </Button>
-              {apiError && (
-                <div className="mt-4 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md w-full max-w-md">
-                  <div className="flex items-center">
-                    <AlertTriangle className="h-5 w-5 mr-2" />
-                    <span className="font-medium">Connection Error</span>
-                  </div>
-                  <p className="text-sm mt-1">{apiError}</p>
-                  <p className="text-sm mt-2">
-                    <strong>Mixed Content Error:</strong> If you're seeing a Mixed Content error, your browser is blocking HTTP requests from HTTPS pages.
-                    Try running the Python server with HTTPS or access this page via HTTP instead.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -166,18 +124,6 @@ const Index = () => {
       />
       
       <main className="flex-1 container max-w-5xl py-6 px-4 md:px-6">
-        {apiError && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-md mb-6">
-            <div className="flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2" />
-              <span className="font-medium">Connection Error</span>
-            </div>
-            <p className="text-sm mt-1">
-              {apiError}. Make sure the server is running at http://localhost:5000
-            </p>
-          </div>
-        )}
-        
         <div className="flex items-center justify-between mb-6">
           <Tabs 
             defaultValue="all" 
@@ -280,7 +226,7 @@ const Index = () => {
 // Helper function to render the alert list with proper animation
 const renderAlertList = (alerts: Alert[], onConnect: (id: string) => void, onDelete: (id: string) => void) => {
   if (alerts.length === 0) {
-    return <EmptyState message="No alerts from the server yet. Use the API to send alerts." />;
+    return <EmptyState />;
   }
 
   return (
@@ -291,7 +237,7 @@ const renderAlertList = (alerts: Alert[], onConnect: (id: string) => void, onDel
       className="grid grid-cols-1 md:grid-cols-2 gap-4"
     >
       {alerts.map((alert, index) => (
-        <AlertCard
+        <AlertCardWrapper
           key={alert.id}
           alert={alert}
           index={index}
