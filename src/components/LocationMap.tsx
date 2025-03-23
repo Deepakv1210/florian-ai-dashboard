@@ -1,14 +1,13 @@
 
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useState, useCallback } from 'react';
+import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
 import { Button } from '@/components/ui/button';
 import { MapPin, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Use a temporary Mapbox public token - in production, this should come from environment variables
-// This is a public token, fine for client-side code
-mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZWFpIiwiYSI6ImNsczQ3OGl1ZTBldXIya3F2ZmV2eGR0N24ifQ.g5QN6pxrN_JH83y5zwkMzQ';
+// This will be a temporary API key - in production, use environment variables
+// For demonstration purposes only
+const GOOGLE_MAPS_API_KEY = "AIzaSyBGCql4idYRAlumnVAx4Cdg6_NzGN2hJA8";
 
 interface LocationMapProps {
   location: string;
@@ -21,90 +20,82 @@ const LocationMap: React.FC<LocationMapProps> = ({
   className,
   onClose,
 }) => {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    const geocodeLocation = async () => {
-      try {
-        console.log('Geocoding location:', location);
-        
-        // Clean the location string for better geocoding results
-        const searchQuery = encodeURIComponent(location.trim());
-        
-        // Add more specific location context for better results
-        const enhancedQuery = searchQuery.includes('Texas A&M') 
-          ? searchQuery 
-          : `${searchQuery}, College Station, Texas`;
-        
-        console.log('Enhanced query:', enhancedQuery);
-        
-        // Geocode the location string to get coordinates
-        const response = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${enhancedQuery}.json?access_token=${mapboxgl.accessToken}&limit=1`
-        );
-        
-        if (!response.ok) {
-          throw new Error('Could not geocode location');
-        }
-        
-        const data = await response.json();
-        console.log('Geocoding response:', data);
-        
-        if (data.features && data.features.length > 0) {
-          const [lng, lat] = data.features[0].center;
-          console.log('Found coordinates:', lng, lat);
-          
-          if (map.current) {
-            map.current.remove();
-          }
-          
-          // Initialize map centered on the geocoded location
-          map.current = new mapboxgl.Map({
-            container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [lng, lat],
-            zoom: 15,
-          });
-          
-          map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-          
-          // Add a marker at the location
-          new mapboxgl.Marker({ color: '#500000' })
-            .setLngLat([lng, lat])
-            .addTo(map.current);
-          
-          map.current.on('load', () => {
-            setMapLoaded(true);
-          });
-        } else {
-          console.error('Location not found in geocoding response');
-          setError(`Unable to find location: ${location}`);
-        }
-      } catch (err) {
-        console.error('Error loading map:', err);
-        setError(`Error loading map for: ${location}`);
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  const mapContainerStyle = {
+    width: '100%',
+    height: '180px',
+  };
+  
+  const defaultCenter = {
+    lat: 30.6188,  // Texas A&M University default coordinates
+    lng: -96.3365,
+  };
+  
+  // Geocode the location string to get coordinates
+  const geocodeLocation = useCallback(async () => {
+    try {
+      setError(null);
+      
+      if (!location || location.trim() === '') {
+        setError('No location provided');
+        return;
       }
-    };
-
-    geocodeLocation();
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
+      
+      console.log('Geocoding location:', location);
+      
+      // Clean the location string for better geocoding results
+      const searchQuery = location.trim();
+      
+      // Add more specific location context for better results
+      const enhancedQuery = searchQuery.includes('Texas A&M') 
+        ? searchQuery 
+        : `${searchQuery}, College Station, Texas`;
+      
+      console.log('Enhanced query:', enhancedQuery);
+      
+      // Use Google Geocoding API
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(enhancedQuery)}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Could not geocode location');
       }
-    };
+      
+      const data = await response.json();
+      console.log('Geocoding response:', data);
+      
+      if (data.status === 'OK' && data.results && data.results.length > 0) {
+        const { lat, lng } = data.results[0].geometry.location;
+        console.log('Found coordinates:', lat, lng);
+        setCoordinates({ lat, lng });
+      } else {
+        console.error('Location not found in geocoding response');
+        setError(`Unable to find location: ${location}`);
+      }
+    } catch (err) {
+      console.error('Error geocoding location:', err);
+      setError(`Error loading map for: ${location}`);
+    }
   }, [location]);
+  
+  // Geocode the location when the component mounts
+  React.useEffect(() => {
+    geocodeLocation();
+  }, [geocodeLocation]);
+  
+  const handleMapLoad = () => {
+    setMapLoaded(true);
+  };
 
   return (
     <div className={cn(
       'relative rounded-md overflow-hidden border border-border bg-muted',
       'transition-all duration-300',
-      mapLoaded ? 'opacity-100' : 'opacity-70',
+      mapLoaded && coordinates ? 'opacity-100' : 'opacity-70',
       className
     )}>
       {error ? (
@@ -114,12 +105,49 @@ const LocationMap: React.FC<LocationMapProps> = ({
         </div>
       ) : (
         <>
-          <div ref={mapContainer} className="h-[180px] w-full" />
+          <LoadScript googleMapsApiKey={GOOGLE_MAPS_API_KEY} onLoad={() => console.log('Google Maps script loaded')}>
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
+              center={coordinates || defaultCenter}
+              zoom={15}
+              onLoad={handleMapLoad}
+              options={{
+                disableDefaultUI: true,
+                zoomControl: true,
+                mapTypeControl: false,
+                streetViewControl: false,
+                styles: [
+                  {
+                    featureType: "all",
+                    elementType: "labels.text.fill",
+                    stylers: [{ color: "#7c7c7c" }]
+                  },
+                  {
+                    featureType: "administrative",
+                    elementType: "labels.text.fill",
+                    stylers: [{ color: "#500000" }]  // Texas A&M maroon color
+                  }
+                ]
+              }}
+            >
+              {coordinates && (
+                <Marker
+                  position={coordinates}
+                  icon={{
+                    url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+                    scaledSize: new window.google.maps.Size(40, 40)
+                  }}
+                />
+              )}
+            </GoogleMap>
+          </LoadScript>
+          
           {!mapLoaded && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/50">
               <div className="animate-pulse">Loading map...</div>
             </div>
           )}
+          
           {onClose && (
             <Button 
               variant="ghost" 
