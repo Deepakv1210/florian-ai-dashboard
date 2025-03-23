@@ -155,7 +155,7 @@ const AlertCard: React.FC<AlertCardProps> = ({
             <Button 
               variant="default" 
               size="sm" 
-              className="h-8 px-3 rounded-full text-xs bg-maroon-700 hover:bg-maroon-800"
+              className="h-8 px-3 rounded-full text-xs bg-purple-700 hover:bg-purple-800"
               onClick={toggleMap}
             >
               <Map className="h-3 w-3 mr-1" />
