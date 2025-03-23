@@ -25,14 +25,16 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className={cn(
-      'sticky top-0 z-10 glass-effect py-4 px-6 border-b',
+     <div className={cn(
+      'sticky top-0 z-10 py-4 px-6 border-b bg-maroon rounded-bl-lg rounded-br-lg',
       className
     )}>
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center">
         <div className="flex-1">
-          <h1 className="text-xl font-medium">{title}</h1>
-          <p className="text-sm text-muted-foreground">Manage and respond to alert notifications</p>
+          <div className='bg-gray-100 rounded-lg p-4 w-1/4'>
+            <h1 className="text-xl font-medium">{title}</h1>
+            <p className="text-sm text-muted-foreground">Manage and respond to alerts</p>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
@@ -67,7 +69,7 @@ const Header: React.FC<HeaderProps> = ({
           </Button>
         </div>
       </div>
-    </header>
+    </div>
   );
 };
 

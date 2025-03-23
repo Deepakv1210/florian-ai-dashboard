@@ -24,6 +24,7 @@ export default {
 				mono: ['SF Mono', 'monospace'],
 			},
 			colors: {
+				maroon: '#500000',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
