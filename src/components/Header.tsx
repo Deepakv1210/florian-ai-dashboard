@@ -26,7 +26,7 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
      <div className={cn(
-      'sticky top-0 z-10 py-4 px-6 border-b bg-maroon',
+      'sticky top-0 z-10 py-4 px-6 border-b bg-maroon rounded-bl-lg rounded-br-lg',
       className
     )}>
       <div className="flex flex-col sm:flex-row sm:items-center">
@@ -36,10 +36,6 @@ const Header: React.FC<HeaderProps> = ({
             <p className="text-sm text-muted-foreground">Manage and respond to alerts</p>
           </div>
         </div>
-
-        <figure>
-            <img class="h-10" src="https://ems.tamu.edu/wp-content/uploads/2023/06/Cropped-all-white-horizontal-400x56.png"></img>
-        </figure>
         
         <div className="flex items-center gap-3">
           <div className="relative max-w-xs w-full">

@@ -79,7 +79,7 @@ const AlertCard: React.FC<AlertCardProps> = ({
           severityStyles[alert.severity]
         )}
       >
-        <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-start justify-between gap-2">
+        <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-start justify-between">
           <div className="flex items-center gap-2">
             <SeverityIndicator level={alert.severity} size="md" />
             <h3 className="font-medium text-sm text-balance">
@@ -103,44 +103,42 @@ const AlertCard: React.FC<AlertCardProps> = ({
         </CardHeader>
         
         <CardContent className="pb-3 pt-0 px-4">
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
             {alert.possible_death !== undefined && (
               <div className="flex items-center gap-1.5">
-                <Skull className="h-3.5 w-3.5 text-severity-high flex-shrink-0" />
-                <span className="text-xs text-muted-foreground">Possible casualties: </span>
-                <span className="text-xs font-medium">{(alert.possible_death * 100).toFixed(1)}%</span>
+                <Skull className="h-3 w-3 text-severity-high" />
+                <span className="text-muted-foreground">Possible casualties: </span>
+                <span className="font-medium">{alert.possible_death}</span>
               </div>
             )}
             
             {alert.false_alarm !== undefined && (
               <div className="flex items-center gap-1.5">
-                <BellOff className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                <span className="text-xs text-muted-foreground">False alarm rate: </span>
-                <span className="text-xs font-medium">{(alert.false_alarm * 100).toFixed(1)}%</span>
+                <BellOff className="h-3 w-3 text-muted-foreground" />
+                <span className="text-muted-foreground">False alarm rate: </span>
+                <span className="font-medium">{alert.false_alarm}%</span>
               </div>
             )}
             
             {hasLocation && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 text-maroon-600 flex-shrink-0" />
-                <span className="text-xs text-muted-foreground">Location: </span>
-                <span className="text-xs font-medium">{alert.location}</span>
+              <div className="flex items-center gap-1.5 col-span-2">
+                <MapPin className="h-3 w-3 text-maroon-600" />
+                <span className="text-muted-foreground">Location: </span>
+                <span className="font-medium">{alert.location}</span>
               </div>
             )}
             
             {alert.description && (
-              <div className="flex items-start gap-1.5">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <div>
-                  <span className="text-xs text-muted-foreground">Details: </span>
-                  <span className="text-xs font-medium">{alert.description}</span>
-                </div>
+              <div className="flex items-center gap-1.5 col-span-2">
+                <FileText className="h-3 w-3 text-muted-foreground" />
+                <span className="text-muted-foreground">Details: </span>
+                <span className="font-medium">{alert.description}</span>
               </div>
             )}
             
-            <div className="mt-3 py-1.5 px-3 rounded-md bg-background/50 border border-border/50">
+            <div className="col-span-2 mt-2 py-1.5 px-3 rounded-md bg-background/50 border border-border/50">
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Severity:</span>
+                <span className="text-muted-foreground text-xs">Severity:</span>
                 <span className={cn("text-xs", severityTextStyles[alert.severity])}>
                   {alert.severity.charAt(0).toUpperCase() + alert.severity.slice(1)}
                 </span>
@@ -150,14 +148,11 @@ const AlertCard: React.FC<AlertCardProps> = ({
         </CardContent>
         
         <CardFooter className="px-4 py-3 flex items-center justify-between bg-secondary/40 border-t border-border/50">
-          <div className="flex items-center">
-            <span className="text-xs font-semibold mr-2">ER</span>
-            <RecipientBadge 
-              name={alert.recipient.name}
-              avatarUrl={alert.recipient.avatarUrl}
-              isOnline={alert.recipient.isOnline}
-            />
-          </div>
+          <RecipientBadge 
+            name={alert.recipient.name}
+            avatarUrl={alert.recipient.avatarUrl}
+            isOnline={alert.recipient.isOnline}
+          />
         </CardFooter>
       </Card>
     </motion.div>
