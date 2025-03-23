@@ -1,5 +1,6 @@
 
 import config from '../config';
+import { Alert } from '@/components/AlertCard';
 
 /**
  * API Client for making HTTP requests to the backend
@@ -14,7 +15,7 @@ class ApiClient {
   /**
    * Get all alerts
    */
-  async getAlerts() {
+  async getAlerts(): Promise<Alert[]> {
     try {
       const response = await fetch(`${this.baseUrl}${config.api.endpoints.alerts}`);
       

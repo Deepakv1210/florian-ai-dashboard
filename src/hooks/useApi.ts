@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../services/apiClient';
 import { toast } from 'sonner';
+import { Alert } from '@/components/AlertCard';
 
 /**
  * Hook for working with API data
@@ -14,13 +15,18 @@ export function useApi() {
   // Query for fetching alerts
   const alertsQuery = useQuery({
     queryKey: ['alerts'],
-    queryFn: apiClient.getAlerts.bind(apiClient),
+    queryFn: async (): Promise<Alert[]> => {
+      try {
+        const result = await apiClient.getAlerts();
+        return result as Alert[];
+      } catch (error) {
+        toast.error('Failed to fetch alerts', {
+          description: 'Please check your connection to the API server',
+        });
+        throw error;
+      }
+    },
     refetchInterval: 5000, // Poll every 5 seconds
-    onError: () => {
-      toast.error('Failed to fetch alerts', {
-        description: 'Please check your connection to the API server',
-      });
-    }
   });
 
   // Mutation for deleting an alert

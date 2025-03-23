@@ -12,7 +12,7 @@ const config = {
     // Base URL for all API requests
     baseUrl: isDevelopment 
       ? 'http://localhost:5000/api' 
-      : process.env.REACT_APP_API_URL || 'https://your-api-domain.com/api',
+      : import.meta.env.VITE_API_URL || 'https://your-api-domain.com/api',
     
     // Endpoints
     endpoints: {
@@ -23,7 +23,7 @@ const config = {
   
   // Map configuration (for future use)
   map: {
-    apiKey: process.env.REACT_APP_MAPBOX_TOKEN || 'pk.eyJ1IjoiZGVtby1hcGkta2V5IiwiYSI6ImNsMHRuMjlscjBwNHgzanBrdWNqZmdxdXYifQ.Cwoi9UvQRiYC9GEBPDfcxw'
+    apiKey: import.meta.env.VITE_MAPBOX_TOKEN || 'pk.eyJ1IjoiZGVtby1hcGkta2V5IiwiYSI6ImNsMHRuMjlscjBwNHgzanBrdWNqZmdxdXYifQ.Cwoi9UvQRiYC9GEBPDfcxw'
   }
 };
 
