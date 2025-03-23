@@ -1,13 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import SeverityIndicator from '@/components/SeverityIndicator';
 import RecipientBadge from '@/components/RecipientBadge';
-import { ExternalLink, Clock, Skull, BellOff, MapPin, FileText, Trash } from 'lucide-react';
+import { ExternalLink, Clock, Skull, BellOff, MapPin, FileText, Trash, Map } from 'lucide-react';
 import { fadeInScale } from './animations';
+import LocationMap from './LocationMap';
 
 export type AlertSeverity = 'high' | 'medium' | 'low';
 
@@ -45,6 +46,8 @@ const AlertCard: React.FC<AlertCardProps> = ({
   onDelete,
   className
 }) => {
+  const [showMap, setShowMap] = useState(false);
+
   const formattedTime = new Date(alert.timestamp).toLocaleString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -56,6 +59,10 @@ const AlertCard: React.FC<AlertCardProps> = ({
     high: 'border-severity-high/10 bg-severity-high/5',
     medium: 'border-severity-medium/10 bg-severity-medium/5',
     low: 'border-severity-low/10 bg-severity-low/5'
+  };
+
+  const toggleMap = () => {
+    setShowMap(!showMap);
   };
 
   return (
@@ -115,10 +122,25 @@ const AlertCard: React.FC<AlertCardProps> = ({
             )}
             
             {alert.location && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="h-3 w-3 text-blue-500" />
+              <div className="flex items-center gap-1.5 col-span-2">
+                <MapPin className="h-3 w-3 text-maroon-600" />
                 <span className="text-muted-foreground">Location: </span>
                 <span className="font-medium">{alert.location}</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 px-1.5 ml-1 rounded-sm text-xs hover:bg-maroon-50"
+                  onClick={toggleMap}
+                >
+                  <Map className="h-3 w-3 mr-1" />
+                  {showMap ? 'Hide Map' : 'View Map'}
+                </Button>
+              </div>
+            )}
+            
+            {showMap && alert.location && (
+              <div className="col-span-2 mt-2">
+                <LocationMap location={alert.location} onClose={() => setShowMap(false)} />
               </div>
             )}
             
@@ -142,7 +164,7 @@ const AlertCard: React.FC<AlertCardProps> = ({
           <Button 
             variant="default" 
             size="sm" 
-            className="h-8 px-3 rounded-full text-xs bg-primary/90 hover:bg-primary"
+            className="h-8 px-3 rounded-full text-xs bg-maroon-700 hover:bg-maroon-800"
             onClick={() => onConnect(alert.id)}
           >
             <ExternalLink className="h-3 w-3 mr-1" />
