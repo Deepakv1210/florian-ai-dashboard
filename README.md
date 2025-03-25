@@ -4,10 +4,6 @@ A real-time emergency alert dashboard for **Florian AI**, powered by a fine-tune
 
 Florian AI helps EMS responders by analyzing emergency calls when they’re occupied, extracting critical information, and displaying it clearly and urgently to aid prioritization.
 
-## 💡 Why Florian?
-
-Named after **Saint Florian**, the patron saint of first responders, this system is built to **honor the bravery of emergency workers** and provide them with AI-enhanced tools to save lives more efficiently.
-
 ---
 
 ## 🧠 What It Does
@@ -62,3 +58,9 @@ The application will run on http://localhost:8080.
    - Estimated casualties
    - False alarm probability
    - Location and severity
+
+### 📂 Dataset for Fine-Tuning
+
+The Gemini 2.0 model was fine-tuned using a dataset of real 911 emergency calls.
+
+👉 [Download Dataset Used for Fine-Tuning](https://www.kaggle.com/datasets/louisteitelbaum/911-recordings)
